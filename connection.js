@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
@@ -8,8 +9,7 @@ const path = require('path');
 
 // App init
 const app = express();
-const PORT = process.env.PORT || 3000;
-require('dotenv').config();
+const PORT = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cookies());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
@@ -36,13 +36,33 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/admin', require('./routes/admin'));
-app.use('/api/test', require('./routes/test'));
+app.use('/api/fav', require('./routes/fav'));
+app.use('/api/dashboard', require('./routes/dashboard'));
+
+// Error Handling Middleware
+app.use((err, req, res, next) => {
+  if (err instanceof require('multer').MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        successful: false,
+        msg: 'File is too large! Maximum limit is 8MB.',
+      });
+    }
+  }
+
+  console.error(err.stack);
+  res.status(500).json({
+    successful: false,
+    msg: err.message || 'Something went wrong!',
+  });
+});
 
 // Run server and Database connection
 try {
-  app.listen(PORT, () => console.log("Server is running..."));
+  app.listen(PORT, () => console.log("Server is running at port " + PORT));
   mongoose
     .connect(process.env.DATABASE_CONNECTION_STRING)
+    .then(() => console.log('Database is connected successfully!!!'))
     .catch((err) => {
       console.error(err.message);
       console.error('Something went wrong while connecting to MongoDB!!!');

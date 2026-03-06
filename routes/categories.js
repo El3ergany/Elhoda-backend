@@ -13,7 +13,7 @@ const {
 } = require('../controllers/categoryController.js');
 
 route.get('/', getAllCategories);
-route.post('/', verifyAdmin, validateCategroy, upload.single('image'), addNewCategory);
+route.post('/', verifyAdmin, upload.single('image'), validateCategroy, addNewCategory);
 route.patch('/:id', verifyAdmin, upload.single('image'), modifyCategory);
 route.delete('/:id', verifyAdmin, removeCategory);
 

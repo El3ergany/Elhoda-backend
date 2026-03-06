@@ -7,7 +7,8 @@ const {
   getMatchedUsers,
   filteredUsers,
   getUserInfo,
-  updateProfile
+  updateProfile,
+  deleteUser
 } = require('../controllers/usersController');
 
 const {
@@ -23,5 +24,6 @@ route.get('/userInfo', getUserInfo);
 // Profile route must come before /:id to avoid route conflicts
 route.patch('/profile', authorizingUser, updateProfile);
 route.patch('/:id', verifyAdmin, modifyUser);
+route.delete('/:id', verifyAdmin, deleteUser);
 
 module.exports = route;

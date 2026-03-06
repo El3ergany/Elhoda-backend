@@ -201,6 +201,30 @@ async function getUserInfo(req, res) {
   }
 }
 
+async function deleteUser(req, res) {
+  try {
+    const { id } = req.params;
+    const user = await Users.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({
+        successful: false,
+        msg: 'User not found',
+      });
+    }
+
+    return res.status(200).json({
+      successful: true,
+      msg: 'User deleted successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      successful: false,
+      msg: error.message,
+    });
+  }
+}
+
 module.exports = {
   getAllUsers,
   modifyUser,
@@ -208,4 +232,5 @@ module.exports = {
   filteredUsers,
   updateProfile,
   getUserInfo,
+  deleteUser,
 };

@@ -11,34 +11,21 @@ async function sendMail(req, res) {
       email: normalizedEmail,
       pwd: req.body.pwd,
     };
-    
+
     const token = jwt.sign(
       payload,
       process.env.TOKEN_SECRET_KEY,
       { expiresIn: '10m' }
     );
 
-    // const transporter = nodemailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     user: 'codecraft920@gmail.com',
-    //     pass: process.env.GMAIL_APP_PASS,
-    //   },
-    // });
-
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      service: 'gmail',
       auth: {
         user: 'codecraft920@gmail.com',
         pass: process.env.GMAIL_APP_PASS,
       },
-      tls: {
-        rejectUnauthorized: false,
-      },
     });
-    
+
     const mailOptions = {
       from: 'Code Craft <codecraft920@gmail.com>',
       to: normalizedEmail,
@@ -51,18 +38,10 @@ async function sendMail(req, res) {
         </a>
       `,
     };
-    console.log('Sending verification email to:', normalizedEmail);
-    transporter.verify((err, success) => {
-      if (err) {
-        console.error('SMTP ERROR:', err);
-      } else {
-        console.log('SMTP READY');
-      }
-    });
 
-    transporter.sendMail(mailOptions)
-      .then(info => console.log(info.response))
-      .catch(error => console.error(error.message));
+    console.log(token);
+
+    await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
       successful: true,

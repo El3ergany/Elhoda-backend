@@ -3,8 +3,8 @@ const Joi = require('joi');
 function orderValidation(req, res, next) {
   try {
     const schema = Joi.object({
-      items: Joi.array().items(Joi.object({
-        productId: Joi.string().required(),
+      products: Joi.array().items(Joi.object({
+        product: Joi.string().required(),
         quantity: Joi.number().required(),
         color: Joi.string().optional().allow(null),
         size: Joi.string().optional().allow(null),

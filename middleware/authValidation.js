@@ -22,7 +22,7 @@ async function loginValidation(req, res, next) {
     // 2. Check Existence (case-insensitive email)
     const normalizedEmail = req.body.email.toLowerCase().trim();
     const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const user = await Users.findOne({ 
+    const user = await Users.findOne({
       email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
     });
     if (!user)
@@ -64,7 +64,7 @@ async function loginValidation(req, res, next) {
 }
 
 // SIGNUP VALIDATION
-function signupValidation(req, res, next) {
+async function signupValidation(req, res, next) {
   const schema = Joi.object({
     name: Joi.string().required(),
     email: Joi.string().regex(new RegExp(/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/)).required(),
@@ -78,6 +78,27 @@ function signupValidation(req, res, next) {
       successful: false,
       msg: error.details[0].message,
     });
+
+  try {
+    const normalizedEmail = req.body.email.toLowerCase().trim();
+    const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const existingUser = await Users.findOne({
+      email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        successful: false,
+        msg: 'User with this email already exists',
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      successful: false,
+      msg: err.message,
+    });
+  }
+
   console.log('Signup validation passed');
   next();
 }

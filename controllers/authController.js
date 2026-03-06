@@ -5,9 +5,45 @@ const cookie = require('cookie-parser');
 
 async function login(req, res) {
   try {
+    const { email, pwd } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Escape special regex characters in email
+    const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const user = await Users.findOne({
+      email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        successful: false,
+        msg: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      });
+    }
+
+    const isMatch = await bcrypt.compare(pwd, user.pwd);
+    if (!isMatch) {
+      return res.status(401).json({
+        successful: false,
+        msg: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+      });
+    }
+
+    // Generate JWT with user id
+    const token = jwt.sign({ id: user._id }, process.env.TOKEN_SECRET_KEY, { expiresIn: '1w' });
+
+    // Set token in HttpOnly cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+    });
+
     return res.status(200).json({
       successful: true,
-      msg: 'Logged in successfully',
+      msg: 'تم تسجيل الدخول بنجاح',
+      data: user,
     });
   } catch (error) {
     return res.status(500).json({
@@ -27,10 +63,10 @@ async function signup(req, res) {
     // Check if user already exists (case-insensitive search)
     // Escape special regex characters in email
     const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const existingUser = await Users.findOne({ 
+    const existingUser = await Users.findOne({
       email: { $regex: new RegExp(`^${escapedEmail}$`, 'i') }
     });
-    
+
     // If user already exists, just log them in (they might be re-verifying)
     if (existingUser) {
       // Generate JWT with user id
@@ -39,8 +75,8 @@ async function signup(req, res) {
       // Set token in HttpOnly cookie
       res.cookie('token', token, {
         httpOnly: true,
-        secure: true,
-        sameSite: 'Strict',
+        secure: false, // Changed for local http development
+        sameSite: 'Lax', // Changed from Strict for cross-origin local dev
         maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       });
 
@@ -103,9 +139,9 @@ function logout(req, res) {
   try {
     res.cookie('token', '', {
       httpOnly: true,
-      secure: true,
-      sameSite: 'Strict',
-      maxAge: 0,
+      secure: false,
+      sameSite: 'Lax',
+      expires: new Date(0),
     });
     return res.status(200).json({
       successful: true,

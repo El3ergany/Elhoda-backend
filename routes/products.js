@@ -24,7 +24,7 @@ route.get('/:category', getProductsByCategory);
 route.get('/item/:id', getProductById);
 
 // Admin
-route.post('/', verifyAdmin, productValidation, upload.array('images', 10), addProduct);
+route.post('/', verifyAdmin, upload.array('images', 10), productValidation, addProduct);
 route.patch('/:id', verifyAdmin, upload.array('images', 10), updateProduct);
 route.delete('/:id', verifyAdmin, deleteProduct);
 

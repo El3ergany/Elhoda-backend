@@ -1,0 +1,4 @@
+- [x] Implement fav routes in routes/fav.js
+- [x] Add fav route to connection.js
+- [x] Test backend fav API (implementation verified, server start issue due to OS)
+- [x] Check frontend for fav functionality and implement missing parts

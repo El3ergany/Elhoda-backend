@@ -30,14 +30,14 @@ async function createOrder(req, res) {
 
     const orderData = { ...req.body };
     if (userId) {
-      orderData.userId = userId;
-      console.log('createOrder - Adding userId to orderData');
+      orderData.user = userId;
+      console.log('createOrder - Adding user ref to orderData');
     }
 
     const newOrder = new Orders(orderData);
     await newOrder.save();
     console.log('createOrder - Order saved:', newOrder._id, 'with userId:', newOrder.userId);
-    
+
     return res.status(201).json({
       successful: true,
       msg: 'Order created successfully',
@@ -59,7 +59,11 @@ async function createOrder(req, res) {
  */
 async function getAllOrders(req, res) {
   try {
-    const orders = await Orders.find().sort({ createdAt: -1 });
+    const orders = await Orders.find()
+      .populate('user', 'name email')
+      .populate('products.product', 'title price')
+      .sort({ createdAt: -1 });
+
     return res.status(200).json({
       successful: true,
       data: orders,
@@ -81,7 +85,7 @@ async function getUserOrders(req, res) {
   try {
     // Get userId from req.userId (set by authorizingUser middleware)
     const userId = req.userId;
-    
+
     console.log('getUserOrders called - userId:', userId);
 
     if (!userId) {
@@ -92,10 +96,10 @@ async function getUserOrders(req, res) {
       });
     }
 
-    // First, try to find orders by userId
-    console.log('Searching for orders with userId:', userId);
-    let orders = await Orders.find({ userId }).sort({ createdAt: -1 });
-    console.log('Found orders by userId:', orders.length);
+    // First, try to find orders by user reference
+    console.log('Searching for orders with user ref:', userId);
+    let orders = await Orders.find({ user: userId }).sort({ createdAt: -1 });
+    console.log('Found orders by user ref:', orders.length);
 
     // If no orders found by userId, try to find by user's email (for backwards compatibility)
     if (orders.length === 0) {
@@ -106,13 +110,13 @@ async function getUserOrders(req, res) {
           console.log('Found user email:', user.email);
           orders = await Orders.find({ email: user.email }).sort({ createdAt: -1 });
           console.log('Found orders by email:', orders.length);
-          
-          // Update these orders with userId for future searches
+
+          // Update these orders with user ref for future searches
           if (orders.length > 0) {
-            console.log('Updating orders with userId for future queries');
+            console.log('Updating orders with user ref for future queries');
             await Orders.updateMany(
-              { email: user.email, userId: { $exists: false } },
-              { userId: userId }
+              { email: user.email, user: { $exists: false } },
+              { user: userId }
             );
           }
         }
@@ -142,7 +146,7 @@ async function getUserOrders(req, res) {
 async function getOrderByOrderId(req, res) {
   try {
     const { orderId } = req.params;
-    
+
     if (!orderId) {
       return res.status(400).json({
         successful: false,
@@ -214,10 +218,35 @@ async function updateOrder(req, res) {
   }
 }
 
+async function deleteOrder(req, res) {
+  try {
+    const { id } = req.params;
+    const order = await Orders.findByIdAndDelete(id);
+
+    if (!order) {
+      return res.status(404).json({
+        successful: false,
+        msg: 'Order not found',
+      });
+    }
+
+    return res.status(200).json({
+      successful: true,
+      msg: 'Order deleted successfully',
+    });
+  } catch (error) {
+    return res.status(500).json({
+      successful: false,
+      msg: error.message,
+    });
+  }
+}
+
 module.exports = {
   createOrder,
   getAllOrders,
   getUserOrders,
   getOrderByOrderId,
   updateOrder,
+  deleteOrder,
 };

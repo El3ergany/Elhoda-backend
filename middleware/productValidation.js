@@ -8,10 +8,10 @@ function productValidation(req, res, next) {
       category: Joi.string().required(),
       price: Joi.number().required(),
       salePrice: Joi.number().optional(),
-      size: Joi.array().items(Joi.string()).required(),
-      color: Joi.array().items(Joi.string()).optional(),
-      stock: Joi.boolean().optional().default(true),
-      images: Joi.array().items(Joi.string().uri()).required(),
+      sizes: Joi.string().required(), // JSON string from frontend
+      colors: Joi.string().optional(), // JSON string from frontend
+      isFeatured: Joi.any().optional(),
+      stock: Joi.any().optional().default(true),
     });
     const { error } = schema.validate(req.body);
     if (error)
@@ -19,6 +19,15 @@ function productValidation(req, res, next) {
         successful: false,
         msg: error.details[0].message,
       });
+
+    if (!req.files || req.files.length === 0) {
+      if (req.method === 'POST') {
+        return res.status(400).json({
+          successful: false,
+          msg: 'At least one product image is required',
+        });
+      }
+    }
   } catch (error) {
     return res.status(500).json({
       successful: false,

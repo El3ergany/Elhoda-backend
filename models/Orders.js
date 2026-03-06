@@ -3,13 +3,20 @@ const Counter = require('./Counter');
 
 const schema = mongoose.Schema({
   orderId: Number,
-  userId: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+    default: null
+  },
   name: String,
   email: String,
   phone: String,
-  items: [{
-    productId: String,
-    quantity: String,
+  products: [{
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'product'
+    },
+    quantity: Number,
     color: {
       type: String,
       default: null,

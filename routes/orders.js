@@ -9,6 +9,7 @@ const {
   getUserOrders,
   getOrderByOrderId,
   updateOrder,
+  deleteOrder,
 } = require('../controllers/orderController.js');
 
 // Create new order
@@ -25,5 +26,8 @@ router.get('/', verifyAdmin, getAllOrders);
 
 // Update order status (Admin only)
 router.patch('/:id', verifyAdmin, updateOrder);
+
+// Delete order (Admin only)
+router.delete('/:id', verifyAdmin, deleteOrder);
 
 module.exports = router;

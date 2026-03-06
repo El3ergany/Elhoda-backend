@@ -28,6 +28,6 @@ route.get('/verifyUser', authorizingUser, signup);
 route.get('/verifyToken', verifyToken);
 route.get('/getRole', defineRole);
 route.get('/getCurrentUser', getCurrentUser);
-route.get('/logout', logout);
+route.post('/logout', logout);
 
 module.exports = route;
